@@ -1,0 +1,68 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "CopyOutputCGI",
+						"type": "DatasetReference"
+					},
+					"name": "GeneralInfoSet1"
+				},
+				{
+					"dataset": {
+						"referenceName": "CopyOutputCGI_1",
+						"type": "DatasetReference"
+					},
+					"name": "GenerlInfoset2"
+				},
+				{
+					"dataset": {
+						"referenceName": "CopyOutputAddress",
+						"type": "DatasetReference"
+					},
+					"name": "AddressDetails"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Customerall",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerDetails"
+				},
+				{
+					"dataset": {
+						"referenceName": "CustomerAllDetails",
+						"type": "DatasetReference"
+					},
+					"name": "FileDestination"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CombinedGeneralinfo"
+				},
+				{
+					"name": "JoinedAddressData"
+				},
+				{
+					"name": "AddedCurrentDate"
+				},
+				{
+					"name": "SelectDesiredColumns"
+				},
+				{
+					"name": "GetDistinctRows"
+				},
+				{
+					"name": "SelectDesiredCols"
+				}
+			],
+			"script": "\n\nsource(output(\n\t\tID as string,\n\t\tJobTitle as string,\n\t\tFirstNameLastName as string,\n\t\tPhoneNumber as string,\n\t\tEmailAddress as string,\n\t\tGender as string,\n\t\tFirstName as string,\n\t\tLastName as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> GeneralInfoSet1\nsource(output(\n\t\tID as string,\n\t\tJobTitle as string,\n\t\tFirstNameLastName as string,\n\t\tPhoneNumber as string,\n\t\tEmailAddress as string,\n\t\tGender as string,\n\t\tFirstName as string,\n\t\tLastName as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> GenerlInfoset2\nsource(output(\n\t\tID as string,\n\t\tFirstName_LastName as string,\n\t\tCountry as string,\n\t\tUS_State as string,\n\t\tStreetAddress as string,\n\t\tLanguage as string,\n\t\tCity as string,\n\t\tStreet as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> AddressDetails\nGeneralInfoSet1, GenerlInfoset2 union(byName: true)~> CombinedGeneralinfo\nCombinedGeneralinfo, AddressDetails join(FirstNameLastName == FirstName_LastName,\n\tjoinType:'inner',\n\tbroadcast: 'none')~> JoinedAddressData\nGetDistinctRows derive(DateOfEntry = currentDate()) ~> AddedCurrentDate\nAddedCurrentDate select(mapColumn(\n\t\tJobTitle,\n\t\tFirstNameLastName,\n\t\tPhoneNumber,\n\t\tEmailAddress,\n\t\tGender,\n\t\tFirstName,\n\t\tLastName,\n\t\tCountry,\n\t\tUS_State,\n\t\tStreetAddress,\n\t\tLanguage,\n\t\tCity,\n\t\tStreet,\n\t\tDateOfEntry\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDesiredColumns\nSelectDesiredCols aggregate(groupBy(FirstNameLastName = FirstNameLastName,\n\t\tJobTitle = JobTitle,\n\t\tPhoneNumber = PhoneNumber,\n\t\tEmailAddress = EmailAddress,\n\t\tGender = Gender,\n\t\tFirstName = FirstName,\n\t\tLastName = LastName,\n\t\tCountry = Country,\n\t\tUS_State = US_State,\n\t\tStreetAddress = StreetAddress,\n\t\tCity = City,\n\t\tStreet = Street,\n\t\tLanguage = Language),\n\tCount_of_rows = count(FirstNameLastName)) ~> GetDistinctRows\nJoinedAddressData select(mapColumn(\n\t\tJobTitle,\n\t\tFirstNameLastName,\n\t\tPhoneNumber,\n\t\tEmailAddress,\n\t\tGender,\n\t\tFirstName,\n\t\tLastName,\n\t\tFirstName_LastName,\n\t\tCountry,\n\t\tUS_State,\n\t\tStreetAddress,\n\t\tLanguage,\n\t\tCity,\n\t\tStreet\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDesiredCols\nSelectDesiredColumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tpartitionBy('hash', 1)) ~> CustomerDetails\nSelectDesiredColumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['Customerdetails'],\n\tpartitionBy('hash', 1)) ~> FileDestination"
+		}
+	}
+}

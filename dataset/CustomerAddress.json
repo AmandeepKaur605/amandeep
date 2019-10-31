@@ -1,0 +1,51 @@
+{
+	"name": "CustomerAddress",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FirstName_LastName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Country",
+				"type": "nvarchar"
+			},
+			{
+				"name": "US_State",
+				"type": "nvarchar"
+			},
+			{
+				"name": "StreetAddress",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Language",
+				"type": "nvarchar"
+			},
+			{
+				"name": "City",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Street",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "CustomerAddress"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
